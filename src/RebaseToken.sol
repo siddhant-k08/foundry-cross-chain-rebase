@@ -46,6 +46,15 @@ contract RebaseToken is ERC20 {
     }
 
     /**
+     * @notice Get the principle balance of a user. This is the number of tokens that have currently been minted to the user, not including any interest that has accrued since the last time the user interacted with the protocol.
+     * @param _user The user to get the principle balance of
+     * @return The principle balance of the user
+     */
+    function principleBalanceOf(address _user) external view returns(uint256){
+        return super.balanceOf(_user);
+    }
+
+    /**
      * @notice Mint the user tokens when they deposit into the vault
      * @param _to The user to mint the tokens to
      * @param _amount The amount of tokens to mint
@@ -54,6 +63,19 @@ contract RebaseToken is ERC20 {
         _mintAccruedInterest(_to);
         s_userInterestRate[_to] = s_interestRate;
         _mint(_to, _amount);
+    }
+
+    /**
+     * @notice Burn the user tokens when they withdraw from the vault
+     * @param _from The user to burn the tokens from
+     * @param _amount The amount of tokens to burn
+     */
+    function burn(address _from, uint256 _amount) external {
+        if (_amount == type(uint256).max) {
+            _amount = balanceOf(_from);
+        }
+        _mintAccruedInterest(_from);
+        _burn(_from, _amount);
     }
 
     /**
@@ -79,8 +101,16 @@ contract RebaseToken is ERC20 {
         linearInterest = PRECISION_FACTOR + (s_userInterestRate[_user] * timeElapsed);
     }
 
+    /**
+     * @notice Mint the accrued interest to the user since the last time they interacted with the user
+     * @param _user The user to mint the accrued interest to
+     */
     function _mintAccruedInterest(address _user) internal {
+        uint256 previousPrincipleBalance = super.balanceOf(_user);
+        uint256 currentBalance = balanceOf(_user);
+        uint256 balanceIncreased = currentBalance - previousPrincipleBalance;
         s_userLastUpdatedTimestamp[_user] = block.timestamp;
+        _mint(_user, balanceIncreased);
     }
 
     /**
@@ -91,4 +121,13 @@ contract RebaseToken is ERC20 {
     function getUserInterestRate(address _user) external view returns (uint256) {
         return s_userInterestRate[_user];
     }
+
+    /**
+     * @notice Get the current interest rate of the contract
+     * @return The interest rate of the smart contract
+     */
+    function getInterestRate() external view returns (uint256) {
+        return s_interestRate;
+    }
+
 }
