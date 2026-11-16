@@ -27,7 +27,7 @@ contract RebaseTokenPool is TokenPool {
         });
     }
 
-    function releaseOrMint(Pool.ReleaseOrMintInV1 calldata releaseOrMintIn, bytes4 requestedFinalityConfig)
+    function releaseOrMint(Pool.ReleaseOrMintInV1 calldata releaseOrMintIn)
         public
         override
         returns (Pool.ReleaseOrMintOutV1 memory)
